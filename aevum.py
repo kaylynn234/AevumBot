@@ -39,15 +39,15 @@ def ensure_data(member_id_to_find=None):
     with open(json_path, "r") as to_be_loaded:
         loaded = json.load(to_be_loaded)
 
-    if not loaded:
-        raise NoTimezonesFoundError("Nobody has registered any timezones yet!")
-
     if member_id_to_find:
-        member = loaded.get(member_id_to_find, None)
+        member = loaded.get(str(member_id_to_find), None)
         if member:
             return member
         else:
             raise NoTimezonesFoundError("This member has not registered a timezone yet!")
+
+    if not loaded:
+        raise NoTimezonesFoundError("Nobody has registered any timezones yet!")
 
     return loaded
 
