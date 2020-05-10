@@ -76,7 +76,7 @@ async def all(ctx):
 
     data = []
     for readable, tz in sort_tz_and_get_display(loaded, ctx):
-        current_time = pendulum.now(tz=tz).format("dddd DD MMMM YYYY HH:mm")
+        current_time = pendulum.now(tz=tz).format("dddd DD MMMM HH:mm")
         data.append(f"**{readable}**: {current_time}")
 
     page_data = TimezoneMenu(data, "Timezones for all members")
