@@ -5,7 +5,7 @@ import sys
 import os
 import json
 import aevum_auth
-import traceback
+import dateparser
 
 json_path = f"{sys.path[0]}/tz.json"
 
@@ -52,7 +52,7 @@ def ensure_data(member_id_to_find=None):
     return loaded
 
 
-bot = commands.AutoShardedBot(command_prefix="tz ", case_insensitive=True)
+bot = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or("tz "), case_insensitive=True)
 bot.load_extension("jishaku")
 
 
@@ -68,6 +68,47 @@ async def all(ctx):
         user = bot.get_user(int(user_id))
         readable = user.display_name if user else user_id
         current_time = pendulum.now(tz=tz).format("dddd DD MMMM YYYY HH:mm")
+        data.append(f"{readable}: {current_time}")
+
+    page_data = TimezoneMenu(data, "Timezones for all members")
+    menu = menus.MenuPages(page_data, timeout=180, clear_reactions_after=True)
+    await menu.start(ctx)
+
+
+# time to use the excellent copy-paste-changeslightly tactic
+@bot.command()
+async def timein(ctx, hours: int):
+    """Displays what time it will be for all registered members in x hours."""
+
+    loaded = ensure_data()
+    data = []
+    for user_id, tz in loaded.items():
+        user = bot.get_user(int(user_id))
+        readable = user.display_name if user else user_id
+        current_time = pendulum.now(tz=tz).add(hours=hours).format("dddd DD MMMM YYYY HH:mm")
+        data.append(f"{readable}: {current_time}")
+
+    page_data = TimezoneMenu(data, "Timezones for all members")
+    menu = menus.MenuPages(page_data, timeout=180, clear_reactions_after=True)
+    await menu.start(ctx)
+
+
+@bot.command()
+async def timeat(ctx, when):
+    """Displays what time it will be for all registered members when it is a certain time for you."""
+
+    you = ensure_data(ctx.author.id)
+    loaded = ensure_data()
+    found = dateparser.parse(when)
+    if not found:
+        raise NoTimezonesFoundError("Couldn't interpret that time.")
+
+    in_tz = pendulum.instance(found, you)
+    data = []
+    for user_id, tz in loaded.items():
+        user = bot.get_user(int(user_id))
+        readable = user.display_name if user else user_id
+        current_time = in_tz.in_timezone(tz).format("dddd DD MMMM YYYY HH:mm")
         data.append(f"{readable}: {current_time}")
 
     page_data = TimezoneMenu(data, "Timezones for all members")
