@@ -55,7 +55,7 @@ def ensure_data(member_id_to_find=None):
 def sort_tz_and_get_display(time_dict, ctx):
     tz_list = []
     for user_id, tz in time_dict.items():
-        user = ctx.guild.get_user(int(user_id))
+        user = ctx.guild.get_member(int(user_id))
         print(int(user_id))
         readable = user.display_name if user else user_id
         tz_list.append((readable, tz))
