@@ -75,7 +75,7 @@ async def all(ctx):
     loaded = ensure_data()
 
     data = []
-    for readable, tz in loaded.items():
+    for readable, tz in sort_tz_and_get_display(loaded, ctx):
         current_time = pendulum.now(tz=tz).format("dddd DD MMMM YYYY HH:mm")
         data.append(f"**{readable}**: {current_time}")
 
@@ -91,7 +91,7 @@ async def timein(ctx, hours: int):
 
     loaded = ensure_data()
     data = []
-    for readable, tz in loaded.items():
+    for readable, tz in sort_tz_and_get_display(loaded, ctx):
         current_time = pendulum.now(tz=tz).add(hours=hours).format("dddd DD MMMM YYYY HH:mm")
         data.append(f"**{readable}**: {current_time}")
 
@@ -112,7 +112,7 @@ async def timeat(ctx, when):
 
     in_tz = pendulum.instance(found, you)
     data = []
-    for readable, tz in loaded.items():
+    for readable, tz in sort_tz_and_get_display(loaded, ctx):
         current_time = in_tz.in_timezone(tz).format("dddd DD MMMM YYYY HH:mm")
         data.append(f"**{readable}**: {current_time}")
 
