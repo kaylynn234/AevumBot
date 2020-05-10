@@ -60,7 +60,7 @@ def sort_tz_and_get_display(time_dict, ctx):
         readable = user.display_name if user else user_id
         tz_list.append((readable, tz))
 
-    return sorted(tz_list, key=lambda i: pendulum.now(tz=i[1]))
+    return sorted(tz_list, key=lambda i: pendulum.now(tz=i[1]), reverse=True)
 
 
 bot = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or("tz "), case_insensitive=True)
