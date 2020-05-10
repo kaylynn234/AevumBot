@@ -7,7 +7,7 @@ import json
 import aevum_auth
 import dateparser
 
-json_path = f"{sys.path[0]}/tz.json"
+JSON_PATH = f"{sys.path[0]}/tz.json"
 
 
 class NoTimezonesFoundError(Exception):
@@ -33,10 +33,10 @@ class TimezoneMenu(menus.ListPageSource):
 
 
 def ensure_data(member_id_to_find=None):
-    if not os.path.exists(json_path):
+    if not os.path.exists(JSON_PATH):
         raise NoTimezonesFoundError("Nobody has registered any timezones yet!")
 
-    with open(json_path, "r") as to_be_loaded:
+    with open(JSON_PATH, "r") as to_be_loaded:
         loaded = json.load(to_be_loaded)
 
     if member_id_to_find:
@@ -52,6 +52,17 @@ def ensure_data(member_id_to_find=None):
     return loaded
 
 
+def sort_tz_and_get_display(time_dict, ctx):
+    tz_list = []
+    for user_id, tz in time_dict.items():
+        user = ctx.guild.get_user(int(user_id))
+        print(int(user_id))
+        readable = user.display_name if user else user_id
+        tz_list.append((readable, tz))
+
+    return sorted(tz_list, key=lambda i: pendulum.now(tz=i[1]), reverse=True)
+
+
 bot = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or("tz "), case_insensitive=True)
 bot.load_extension("jishaku")
 
@@ -64,11 +75,9 @@ async def all(ctx):
     loaded = ensure_data()
 
     data = []
-    for user_id, tz in loaded.items():
-        user = bot.get_user(int(user_id))
-        readable = user.display_name if user else user_id
+    for readable, tz in loaded.items():
         current_time = pendulum.now(tz=tz).format("dddd DD MMMM YYYY HH:mm")
-        data.append(f"{readable}: {current_time}")
+        data.append(f"**{readable}**: {current_time}")
 
     page_data = TimezoneMenu(data, "Timezones for all members")
     menu = menus.MenuPages(page_data, timeout=180, clear_reactions_after=True)
@@ -82,11 +91,9 @@ async def timein(ctx, hours: int):
 
     loaded = ensure_data()
     data = []
-    for user_id, tz in loaded.items():
-        user = bot.get_user(int(user_id))
-        readable = user.display_name if user else user_id
+    for readable, tz in loaded.items():
         current_time = pendulum.now(tz=tz).add(hours=hours).format("dddd DD MMMM YYYY HH:mm")
-        data.append(f"{readable}: {current_time}")
+        data.append(f"**{readable}**: {current_time}")
 
     page_data = TimezoneMenu(data, "Timezones for all members")
     menu = menus.MenuPages(page_data, timeout=180, clear_reactions_after=True)
@@ -105,11 +112,9 @@ async def timeat(ctx, when):
 
     in_tz = pendulum.instance(found, you)
     data = []
-    for user_id, tz in loaded.items():
-        user = bot.get_user(int(user_id))
-        readable = user.display_name if user else user_id
+    for readable, tz in loaded.items():
         current_time = in_tz.in_timezone(tz).format("dddd DD MMMM YYYY HH:mm")
-        data.append(f"{readable}: {current_time}")
+        data.append(f"**{readable}**: {current_time}")
 
     page_data = TimezoneMenu(data, "Timezones for all members")
     menu = menus.MenuPages(page_data, timeout=180, clear_reactions_after=True)
@@ -137,14 +142,14 @@ async def set_tz(ctx, *, tz):
     """
 
     pendulum.now(tz=tz)
-    if os.path.exists(json_path):
-        with open(json_path, "r") as to_be_loaded:
+    if os.path.exists(JSON_PATH):
+        with open(JSON_PATH, "r") as to_be_loaded:
             data = json.load(to_be_loaded)
             data[ctx.author.id] = tz
     else:
         data = {ctx.author.id: tz}
 
-    with open(json_path, "w+") as to_write:    
+    with open(JSON_PATH, "w+") as to_write:    
         json.dump(data, to_write)
 
     await ctx.send("Timezone set!")

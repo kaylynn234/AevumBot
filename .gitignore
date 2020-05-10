@@ -1,3 +1,4 @@
-
 aevum_auth.py
 tz.json
+__pycache__/
+*.pyc
